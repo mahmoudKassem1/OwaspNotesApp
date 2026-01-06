@@ -67,6 +67,8 @@ const logoutUser = (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
     expires: new Date(0),
+    secure: true,      // <--- ADDED: Must match the login cookie to delete it
+    sameSite: 'None',  // <--- ADDED: Must match the login cookie to delete it
   });
   res.status(200).json({ message: 'Logged out successfully' });
 };
@@ -98,7 +100,7 @@ const verifyPassword = asyncHandler(async (req, res) => {
     }
 });
 
-
+// Helper Function
 const generateToken = (res, id) => {
     const token = jwt.sign({ id }, process.env.JWT_SECRET, {
       expiresIn: '30d',
@@ -106,11 +108,12 @@ const generateToken = (res, id) => {
   
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development', // Use secure cookies in production
-      sameSite: 'strict', // Prevent CSRF attacks
+      // CRITICAL CHANGES FOR VERCEL DEPLOYMENT:
+      secure: true,       // Must be true for sameSite: 'None'
+      sameSite: 'None',   // Allows cookie to travel from Render -> Vercel
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
-  };
+};
 
 module.exports = {
   registerUser,
