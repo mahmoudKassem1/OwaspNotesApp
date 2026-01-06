@@ -18,10 +18,16 @@ connectDB();
 
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-}));
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://owasp-notes-app.vercel.app", 
+    "https://owaspnotesapp.vercel.app"      
+  ],
+  credentials: true
+};
+app.use(cors(corsOptions));
+
 
 
 // Set security headers
