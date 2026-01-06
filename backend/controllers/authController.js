@@ -27,11 +27,14 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    generateToken(res, user._id);
+    // Capture the token returned by the helper
+    const token = generateToken(res, user._id);
+
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
+      token: token, // <--- ADDED: Send token to frontend for mobile support
     });
   } else {
     res.status(400);
@@ -48,11 +51,14 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
-    generateToken(res, user._id);
+    // Capture the token returned by the helper
+    const token = generateToken(res, user._id);
+
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
+      token: token, // <--- ADDED: Send token to frontend for mobile support
     });
   } else {
     res.status(401);
@@ -67,8 +73,8 @@ const logoutUser = (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
     expires: new Date(0),
-    secure: true,      // <--- ADDED: Must match the login cookie to delete it
-    sameSite: 'None',  // <--- ADDED: Must match the login cookie to delete it
+    secure: true,      
+    sameSite: 'None',  
   });
   res.status(200).json({ message: 'Logged out successfully' });
 };
@@ -106,13 +112,16 @@ const generateToken = (res, id) => {
       expiresIn: '30d',
     });
   
+    // Sets the cookie (Works for Desktop/Postman)
     res.cookie('token', token, {
       httpOnly: true,
-      // CRITICAL CHANGES FOR VERCEL DEPLOYMENT:
-      secure: true,       // Must be true for sameSite: 'None'
-      sameSite: 'None',   // Allows cookie to travel from Render -> Vercel
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: true,       
+      sameSite: 'None',   
+      maxAge: 30 * 24 * 60 * 60 * 1000, 
     });
+
+    // Returns the token (Works for Mobile/React State)
+    return token;
 };
 
 module.exports = {
